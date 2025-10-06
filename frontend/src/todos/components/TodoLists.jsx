@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from 'react'
+import React, { Fragment, useState, useEffect, useCallback } from 'react'
 import {
   Card,
   CardContent,
@@ -10,30 +10,31 @@ import {
 } from '@mui/material'
 import ReceiptIcon from '@mui/icons-material/Receipt'
 import { TodoListForm } from './TodoListForm'
-
-// Simulate network
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+import { get, post } from '../../utils'
 
 const fetchTodoLists = () => {
-  return sleep(1000).then(() =>
-    Promise.resolve({
-      '0000000001': {
-        id: '0000000001',
-        title: 'First List',
-        todos: ['First todo of first list!'],
-      },
-      '0000000002': {
-        id: '0000000002',
-        title: 'Second List',
-        todos: ['First todo of second list!'],
-      },
-    })
-  )
+  return get('/lists')
+}
+
+const updateTodos = (id, updateTodoList) => {
+  return post(`/lists/${id}`, updateTodoList)
 }
 
 export const TodoLists = ({ style }) => {
   const [todoLists, setTodoLists] = useState({})
   const [activeList, setActiveList] = useState()
+
+  const handleSaveTodoList = useCallback(async (id, todos) => {
+    try {
+      await updateTodos(id, todos)
+      setTodoLists((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], todos },
+      }))
+    } catch (err) {
+      console.error('Failed to save todos', err)
+    }
+  }, [])
 
   useEffect(() => {
     fetchTodoLists().then(setTodoLists)
@@ -61,13 +62,7 @@ export const TodoLists = ({ style }) => {
         <TodoListForm
           key={activeList} // use key to make React recreate component to reset internal state
           todoList={todoLists[activeList]}
-          saveTodoList={(id, { todos }) => {
-            const listToUpdate = todoLists[id]
-            setTodoLists({
-              ...todoLists,
-              [id]: { ...listToUpdate, todos },
-            })
-          }}
+          saveTodoList={handleSaveTodoList}
         />
       )}
     </Fragment>
