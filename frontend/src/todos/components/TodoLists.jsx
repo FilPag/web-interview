@@ -62,7 +62,7 @@ export const TodoLists = ({ style }) => {
         <TodoListForm
           key={activeList} // use key to make React recreate component to reset internal state
           todoList={todoLists[activeList]}
-          saveTodoList={handleSaveTodoList}
+          saveTodoList={(todos) => handleSaveTodoList(activeList, todos)}
         />
       )}
     </Fragment>

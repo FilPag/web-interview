@@ -10,14 +10,23 @@ const PORT = 3001
 
 const todoLists = {
   '0000000001': {
-    id: '0000000001',
     title: 'First List',
-    todos: ['First todo of first list!'],
+    todos: [{
+      title: 'First todo of first list!',
+      completed: false,
+    }],
   },
   '0000000002': {
-    id: '0000000002',
     title: 'Second List',
-    todos: ['First todo of second list!'],
+    todos: [{
+      title: 'First todo of second list!',
+      completed: false,
+    },
+    {
+      title: 'Second todo of second list!',
+      completed: false,
+    },
+  ],
   },
 }
 
@@ -34,18 +43,18 @@ app.post('/lists', (req, res) => {
 // Expects a body with a todos array
 app.post('/lists/:id', (req, res) => {
   const listId = req.params.id;
-  const listToUpdate = req.body;
+  const updatedTodos = req.body;
 
   if (!todoLists[listId]) {
     return res.status(404).json({ error: 'Todo list not found' });
   }
 
-  if (!listToUpdate || !Array.isArray(listToUpdate.todos)) {
+  if (!updatedTodos || !Array.isArray(updatedTodos)) {
     return res.status(400).json({ error: 'Invalid request body: todos must be an array' });
   }
 
-  console.log('listToUpdate', listToUpdate);
-  todoLists[listId].todos = listToUpdate.todos;
+  console.log('updatedTodos', updatedTodos);
+  todoLists[listId].todos = updatedTodos;
   res.sendStatus(200);
 })
 
