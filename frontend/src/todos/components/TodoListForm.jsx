@@ -1,33 +1,48 @@
-import React, { useState} from 'react'
-import { Card, CardContent, CardActions, Button, Typography, CircularProgress } from '@mui/material'
+import React, { useState, useRef } from 'react'
+import { Card, CardContent, CardActions, Button, Typography } from '@mui/material'
 import { Todo } from './Todo'
+import { RequestIndicator } from './RequestIndicator'
 import AddIcon from '@mui/icons-material/Add'
-import CheckIcon from '@mui/icons-material/Check'
+import { put } from '../../utils'
 
+const SAVE_TIMEOUT = 500
+const updateTodos = (id, updateTodoList) => {
+  return put(`/lists/${id}`, updateTodoList)
+}
 
-export const TodoListForm = ({ todoList, saveTodoList }) => {
+export const TodoListForm = ({ todoList}) => {
   const [todos, setTodos] = useState(todoList.todos)
   const [isEditing, setIsEditing] = useState(false)
-  const handleDelete = (index) => {
-    const newTodos = [...todos]
-    newTodos.splice(index, 1)
-    setTodos(newTodos)
-    saveTodoList(newTodos)
+  const [error, setError] = useState(null)
+  const timeoutRef = useRef(null)
+
+  const saveTodos = async (newTodos) => {
+    try {
+      await updateTodos(todoList.id, newTodos)
+      setIsEditing(false)
+    } catch (err) {
+      console.error('Failed to save todos', err)
+      setError(err.message || 'Unable to update todos')
+    }
   }
 
-  const handleAdd = () => {
-    const newTodos = [...todos, '']
+  const debouncedSave = (newTodos) => {
     setTodos(newTodos)
-    saveTodoList(newTodos)
+    setIsEditing(true)
+    setError(null)
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      saveTodos(newTodos)
+    }, SAVE_TIMEOUT)
   }
 
-  const handleSave = async (id, todo) => {
-    const newTodos = [...todos]
-    newTodos[id] = todo
-    setTodos(newTodos)
-    await saveTodoList(newTodos)
-    setIsEditing(false)
-  }
+  const handleAdd = () => debouncedSave([...todos, ''])
+  const handleDelete = (index) => debouncedSave(todos.filter((_, i) => i !== index))
+  const handleUpdate = (id, todo) => debouncedSave(todos.map((t, i) => (i === id ? todo : t)))
 
   return (
     <Card sx={{ margin: '0 1rem' }}>
@@ -37,22 +52,16 @@ export const TodoListForm = ({ todoList, saveTodoList }) => {
           {todos.map((name, index) => (
             <Todo
               key={index}
-              id={index}
               todo={name}
-              setIsEditing={setIsEditing}
-              saveTodo={(todo) => handleSave(index, todo)}
-              onDelete={handleDelete}
+              onUpdate={(todo) => handleUpdate(index, todo)}
+              onDelete={() => handleDelete(index)}
             />
           ))}
           <CardActions>
             <Button type='button' color='primary' onClick={handleAdd}>
               Add Todo <AddIcon />
             </Button>
-            {isEditing ? (
-              <CircularProgress size={24} color='warning' />
-            ) : (
-              <CheckIcon sx={{ color: 'success.main', fontSize: 24 }} />
-            )}
+            <RequestIndicator isLoading={isEditing} error={error} />
           </CardActions>
         </form>
       </CardContent>

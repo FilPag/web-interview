@@ -1,33 +1,22 @@
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { TextField, Checkbox, Button } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 
-const TYPING_TIMEOUT = 500
-
-export const Todo = ({ id, todo, setIsEditing, saveTodo, onDelete }) => {
+export const Todo = ({ todo, onUpdate, onDelete }) => {
   const [todoState, setTodo] = useState(todo)
-  const timeoutRef = useRef(null)
+
+  const updateTodo = (updates) => {
+    const newTodoState = { ...todoState, ...updates }
+    setTodo(newTodoState)
+    onUpdate(newTodoState)
+  }
 
   const handleInput = (value) => {
-    setIsEditing(true)
-    const newTodoState = { ...todoState }
-    newTodoState.title = value
-    setTodo(newTodoState)
-
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-    }
-    timeoutRef.current = setTimeout(async () => {
-      await saveTodo(newTodoState)
-      setIsEditing(false)
-    }, TYPING_TIMEOUT)
+    updateTodo({ title: value })
   }
 
   const onCompleteChanged = () => {
-    const newTodoState = { ...todoState }
-    newTodoState.completed = !newTodoState.completed
-    setTodo(newTodoState)
-    saveTodo(newTodoState)
+    updateTodo({ completed: !todoState.completed })
   }
 
   return (
@@ -41,7 +30,7 @@ export const Todo = ({ id, todo, setIsEditing, saveTodo, onDelete }) => {
           handleInput(event.target.value)
         }}
       />
-      <Button sx={{ margin: '8px' }} size='small' color='secondary' onClick={() => onDelete(id)}>
+      <Button sx={{ margin: '8px' }} size='small' color='secondary' onClick={() => onDelete()}>
         <DeleteIcon />
       </Button>
     </div>
