@@ -34,13 +34,9 @@ export const TodoLists = ({ style }) => {
 
   const updateTodoList = async (updatedList) => {
     const listId = updatedList.id
-    try {
-      await put(`/lists/${listId}`, updatedList)
-      const newTodoLists = { ...todoLists, [listId]: updatedList }
-      setTodoLists(newTodoLists)
-    } catch (err) {
-      console.error('Failed to update todo list', err)
-    }
+    await put(`/lists/${listId}`, updatedList)
+    const newTodoLists = { ...todoLists, [listId]: updatedList }
+    setTodoLists(newTodoLists)
   }
 
   useEffect(() => {
