@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PropTypes from 'prop-types'
 import { TextField, Checkbox, Button } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 
@@ -25,6 +26,11 @@ export const Todo = ({ todo, onUpdate, onDelete }) => {
       <TextField
         sx={{ flexGrow: 1, marginTop: '1rem' }}
         label='What to do?'
+        inputProps={{
+          style: {
+            textDecoration: todoState.completed ? 'line-through' : 'none',
+          },
+        }}
         value={todoState.title}
         onChange={(event) => {
           handleInput(event.target.value)
@@ -35,4 +41,10 @@ export const Todo = ({ todo, onUpdate, onDelete }) => {
       </Button>
     </div>
   )
+}
+
+Todo.propTypes = {
+  todo: PropTypes.object.isRequired,
+  onUpdate: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
 }

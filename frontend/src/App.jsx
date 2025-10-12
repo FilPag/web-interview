@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import { AppBar, Toolbar, Typography } from '@mui/material'
 import { TodoLists } from './todos/components/TodoLists'
 
@@ -39,6 +40,10 @@ const App = () => {
       <TodoLists style={{ margin: '1rem' }} />
     </MainWrapper>
   )
+}
+
+MainWrapper.propTypes = {
+  children: PropTypes.node.isRequired,
 }
 
 export default App

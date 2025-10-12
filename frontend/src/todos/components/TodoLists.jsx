@@ -1,4 +1,5 @@
-import React, { Fragment, useState, useEffect, useCallback } from 'react'
+import React, { Fragment, useEffect, useState } from 'react'
+import PropTypes from 'prop-types'
 import {
   Card,
   CardContent,
@@ -10,23 +11,48 @@ import {
 } from '@mui/material'
 import ReceiptIcon from '@mui/icons-material/Receipt'
 import { TodoListForm } from './TodoListForm'
-import { get, put} from '../../utils'
-
-const fetchTodoLists = () => {
-  return get('/lists')
-}
-
-
+import { ErrorPage } from './ErrorPage'
+import { get, put } from '../../api'
 
 export const TodoLists = ({ style }) => {
   const [todoLists, setTodoLists] = useState({})
-  const [activeList, setActiveList] = useState()
+  const [activeListId, setActiveListId] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const fetchTodoLists = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await get('/lists')
+      setTodoLists(data)
+    } catch (err) {
+      setError(err.message)
+    }
+    setLoading(false)
+  }
+
+  const updateTodoList = async (updatedList) => {
+    const listId = updatedList.id
+    try {
+      await put(`/lists/${listId}`, updatedList)
+      const newTodoLists = { ...todoLists, [listId]: updatedList }
+      setTodoLists(newTodoLists)
+    } catch (err) {
+      console.error('Failed to update todo list', err)
+    }
+  }
 
   useEffect(() => {
-    fetchTodoLists().then(setTodoLists)
+    fetchTodoLists()
   }, [])
 
+  if (loading) return <div />
+  if (error) return <ErrorPage error={error} />
   if (!Object.keys(todoLists).length) return null
+
+  const activeList = activeListId ? todoLists[activeListId] : null
+
   return (
     <Fragment>
       <Card style={style}>
@@ -34,7 +60,7 @@ export const TodoLists = ({ style }) => {
           <Typography component='h2'>My Todo Lists</Typography>
           <List>
             {Object.keys(todoLists).map((key) => (
-              <ListItemButton key={key} onClick={() => setActiveList(key)}>
+              <ListItemButton key={key} onClick={() => setActiveListId(key)}>
                 <ListItemIcon>
                   <ReceiptIcon />
                 </ListItemIcon>
@@ -44,12 +70,13 @@ export const TodoLists = ({ style }) => {
           </List>
         </CardContent>
       </Card>
-      {todoLists[activeList] && (
-        <TodoListForm
-          key={activeList} // use key to make React recreate component to reset internal state
-          todoList={todoLists[activeList]}
-        />
+      {activeList && (
+        <TodoListForm key={activeListId} todoList={activeList} onUpdate={updateTodoList} />
       )}
     </Fragment>
   )
+}
+
+TodoLists.propTypes = {
+  style: PropTypes.object.isRequired,
 }

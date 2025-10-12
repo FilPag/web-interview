@@ -33,13 +33,12 @@ const todoLists = {
   },
 }
 
-const mapTodoLists = (todoLists) => {
-  return Object.keys(todoLists).map((key) => {
-    return {
-      id: key,
-      ...todoLists[key],
-    }
-  })
+function mapTodoLists(lists) {
+  const result = {}
+  for (const id in lists) {
+    result[id] = { id, ...lists[id] }
+  }
+  return result
 }
 
 app.get('/lists', (req, res) => res.json(mapTodoLists(todoLists)))
@@ -51,22 +50,16 @@ app.post('/lists', (req, res) => {
 })
 
 app.put('/lists/:id', (req, res) => {
-  setTimeout(() => {
-    const listId = req.params.id
-    const updatedTodos = req.body
+  const listId = req.params.id
+  const updatedList = req.body
 
-    if (!todoLists[listId]) {
-      return res.status(404).json({ error: 'Todo list not found' })
-    }
+  if (!todoLists[listId]) {
+    return res.status(404).json({ error: 'Todo list not found' })
+  }
 
-    if (!updatedTodos || !Array.isArray(updatedTodos)) {
-      return res.status(400).json({ error: 'Invalid request body: todos must be an array' })
-    }
-
-    console.log(`Updating todos for list ${listId}:`, JSON.stringify(updatedTodos, null, 2))
-    todoLists[listId].todos = updatedTodos
-    res.json(mapTodoLists(todoLists))
-  }, 1000)
+  console.log(`Updating todos for list ${listId}:`, JSON.stringify(updatedList, null, 2))
+  todoLists[listId] = updatedList
+  res.json(mapTodoLists(todoLists))
 })
 
 app.listen(PORT, () => console.log(`Example app listening on port ${PORT}!`))
